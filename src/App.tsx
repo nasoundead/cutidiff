@@ -11,6 +11,9 @@ function App() {
   const [leftFiles, setLeftFiles] = useState<File[]>([]);
   const [rightFiles, setRightFiles] = useState<File[]>([]);
 
+  const [leftFileModified, setLeftFileModified] = useState<number>(0);
+  const [rightFileModified, setRightFileModified] = useState<number>(0);
+
   const handleLeftDrop = (acceptedFiles: File[]) => setLeftFiles(acceptedFiles);
  
   const handleRightDrop = (acceptedFiles: File[]) => setRightFiles(acceptedFiles);
@@ -23,6 +26,7 @@ function App() {
   useEffect(() => {
     (async () => {
       let fileName = leftFiles[0].name;
+      setLeftFileModified(leftFiles[0].lastModified);
       setGreetMsg(await invoke("greet", { name: fileName }));
     })();
   });
@@ -30,8 +34,30 @@ function App() {
   useEffect(() => {
     (async () => {
       let fileName = rightFiles[0].name;
+      setRightFileModified(rightFiles[0].lastModified);
       setGreetMsg(await invoke("greet", { name: fileName }));
     })();
+  });
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+        // 每隔5秒检查下文件是否有变化
+        let leftFileModifiedNow = leftFiles[0].lastModified;
+        let rightFileModifiedNow = rightFiles[0].lastModified;
+        if (leftFileModifiedNow !== leftFileModified) {
+          setLeftFileModified(leftFileModifiedNow);
+          setGreetMsg("left file modified");
+        }
+        if (rightFileModifiedNow !== rightFileModified) {
+          setRightFileModified(rightFileModifiedNow);
+          setGreetMsg("right file modified");
+        }
+        // invoke('your_rust_command').catch(console.error);
+    }, 5000);
+    return () => {
+      // 清理定时器
+      clearInterval(interval);
+    };
   });
 
   return (
